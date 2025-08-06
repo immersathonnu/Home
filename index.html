@@ -36,14 +36,31 @@
             height: 100%;
             z-index: -1; /* Stays behind content */
         }
-        #cursor-canvas {
+
+        /* --- NEW CSS CURSOR STYLES --- */
+        .cursor-dot, .cursor-outline {
             position: fixed;
             top: 0;
             left: 0;
-            z-index: 9999; /* High z-index to be on top of everything */
-            pointer-events: none; /* CRITICAL: Allows clicks to go through */
-            display: none; /* Hidden by default, enabled by JS on desktop */
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            display: none; /* Hidden by default, enabled by JS */
         }
+        .cursor-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #c084fc;
+        }
+        .cursor-outline {
+            width: 40px;
+            height: 40px;
+            background-color: rgba(192, 132, 252, 0.2);
+            transition: width 0.3s, height 0.3s, background-color 0.3s;
+            transition-timing-function: ease-out;
+        }
+        /* --- END NEW CURSOR STYLES --- */
 
         main {
             position: relative;
@@ -108,7 +125,9 @@
 <body class="mobile-bg">
     
     <canvas id="bg-canvas"></canvas>
-    <canvas id="cursor-canvas"></canvas>
+    <!-- New HTML elements for the CSS cursor -->
+    <div class="cursor-dot" id="cursor-dot"></div>
+    <div class="cursor-outline" id="cursor-outline"></div>
 
     <!-- Header -->
     <header class="bg-black/30 backdrop-blur-lg fixed w-full top-0 z-50">
@@ -235,19 +254,19 @@
 
     <!-- UPDATED JAVASCRIPT SCRIPT -->
     <script>
-        // --- Three.js Setup ---
-        // These variables are accessible to all functions in the script
+        // --- Universal Variables ---
         let bgScene, bgCamera, bgRenderer, particles, grid;
-        let cursorScene, cursorCamera, cursorRenderer, cursorMesh;
-        
-        const mousePosition = new THREE.Vector2();
-        let isHovering = false;
         const isMobile = window.innerWidth <= 768;
 
-        function initThreeJS() {
-            document.body.classList.remove('mobile-bg');
+        // --- Desktop-only variables ---
+        let cursorDot, cursorOutline;
+        let mouseX = 0, mouseY = 0;
+        let outlineX = 0, outlineY = 0;
+        let isHovering = false;
 
+        function init() {
             // --- 1. Background Canvas Setup (Runs on ALL devices) ---
+            document.body.classList.remove('mobile-bg');
             const bgCanvas = document.getElementById('bg-canvas');
             bgScene = new THREE.Scene();
             bgCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -274,25 +293,13 @@
             grid.position.y = -2;
             bgScene.add(grid);
 
-            // --- 2. Cursor Canvas Setup (Runs ONLY on DESKTOP) ---
+            // --- 2. Cursor Setup (Runs ONLY on DESKTOP) ---
             if (!isMobile) {
-                const cursorCanvas = document.getElementById('cursor-canvas');
-                cursorCanvas.style.display = 'block'; // Make the canvas visible
-
-                cursorScene = new THREE.Scene();
-                cursorCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-                cursorCamera.position.z = 5;
-                cursorRenderer = new THREE.WebGLRenderer({ canvas: cursorCanvas, alpha: true, antialias: true });
-                cursorRenderer.setSize(window.innerWidth, window.innerHeight);
-                cursorRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-                cursorRenderer.setClearColor(0x000000, 0);
-
-                const cursorGeometry = new THREE.IcosahedronGeometry(0.1, 1);
-                const cursorMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true });
-                cursorMesh = new THREE.Mesh(cursorGeometry, cursorMaterial);
-                cursorScene.add(cursorMesh);
-
-                // Add mouse move listener only on desktop
+                cursorDot = document.getElementById('cursor-dot');
+                cursorOutline = document.getElementById('cursor-outline');
+                cursorDot.style.display = 'block';
+                cursorOutline.style.display = 'block';
+                
                 window.addEventListener('mousemove', onMouseMove, false);
             }
 
@@ -307,17 +314,9 @@
             const width = window.innerWidth;
             const height = window.innerHeight;
 
-            // Always resize the background
             bgCamera.aspect = width / height;
             bgCamera.updateProjectionMatrix();
             bgRenderer.setSize(width, height);
-
-            // Only resize the cursor canvas if it exists (on desktop)
-            if (!isMobile) {
-                cursorCamera.aspect = width / height;
-                cursorCamera.updateProjectionMatrix();
-                cursorRenderer.setSize(width, height);
-            }
         }
 
         const perspectiveSections = document.querySelectorAll('.perspective-container');
@@ -349,10 +348,9 @@
             });
         }
 
-        // This function is only called by the event listener on desktop
         function onMouseMove(event) {
-            mousePosition.x = (event.clientX / window.innerWidth) * 2 - 1;
-            mousePosition.y = -(event.clientY / window.innerHeight) * 2 + 1;
+            mouseX = event.clientX;
+            mouseY = event.clientY;
 
             const target = event.target;
             isHovering = !!(target && target.closest('a, button, details'));
@@ -368,31 +366,28 @@
             
             // Only animate the cursor on desktop
             if (!isMobile) {
-                const targetScale = isHovering ? 1.8 : 1.0;
-                const easing = 0.2;
-                
-                cursorMesh.scale.x += (targetScale - cursorMesh.scale.x) * easing;
-                cursorMesh.scale.y += (targetScale - cursorMesh.scale.y) * easing;
-                cursorMesh.scale.z += (targetScale - cursorMesh.scale.z) * easing;
+                const easing = 0.15;
+                outlineX += (mouseX - outlineX) * easing;
+                outlineY += (mouseY - outlineY) * easing;
 
-                const targetColor = isHovering ? new THREE.Color(0x8b5cf6) : new THREE.Color(0xffffff);
-                cursorMesh.material.color.lerp(targetColor, easing);
+                cursorDot.style.transform = `translate(${mouseX}px, ${mouseY}px)`;
+                cursorOutline.style.transform = `translate(${outlineX}px, ${outlineY}px)`;
 
-                const vector = new THREE.Vector3(mousePosition.x, mousePosition.y, 0.5);
-                vector.unproject(cursorCamera);
-                const dir = vector.sub(cursorCamera.position).normalize();
-                const distance = -cursorCamera.position.z / dir.z;
-                cursorMesh.position.copy(cursorCamera.position).add(dir.multiplyScalar(distance));
-                
-                cursorMesh.rotation.y += 0.02;
-                cursorMesh.rotation.x -= 0.01;
+                const targetScale = isHovering ? 1.5 : 1.0;
+                const currentScale = cursorOutline.style.getPropertyValue('scale') || 1.0;
+                const newScale = parseFloat(currentScale) + (targetScale - currentScale) * 0.2;
+                cursorOutline.style.scale = newScale;
 
-                cursorRenderer.render(cursorScene, cursorCamera);
+                if (isHovering) {
+                    cursorOutline.style.backgroundColor = 'rgba(168, 85, 247, 0.3)'; // Brighter purple
+                } else {
+                    cursorOutline.style.backgroundColor = 'rgba(192, 132, 252, 0.2)';
+                }
             }
         }
 
         // Initialize everything on page load
-        initThreeJS();
+        init();
 
         // --- Mobile Menu, Tabs, and Scroll Reveal Logic (This part remains unchanged) ---
         const mobileMenuButton = document.getElementById('mobile-menu-button');
