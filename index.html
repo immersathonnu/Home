@@ -163,8 +163,11 @@
         /* --- END BUTTON STYLES --- */
         
         /* --- FAQ HIGHLIGHT STYLES --- */
-        .card:has(details:hover),
-        .card:has(details[open]) {
+        .faq-card {
+            cursor: pointer;
+        }
+        .faq-card:hover,
+        .faq-card:has(details[open]) {
             border-color: #8b5cf6;
         }
         /* --- END FAQ STYLES --- */
@@ -304,10 +307,10 @@
                 <div class="text-center mb-16 reveal"><h2 class="text-4xl md:text-5xl font-bold text-white">Frequently Asked Questions</h2></div>
                 <div class="max-w-3xl mx-auto space-y-4">
                     <!-- UPDATED FAQ STRUCTURE -->
-                    <div class="card rounded-lg reveal p-6"><details class="cursor-pointer"><summary class="font-semibold text-lg text-white">Who can participate?</summary><p class="text-slate-400 mt-4">NUhaxXR is open to all students (from Northeastern and other universities), creatives, technologists, and hobbyists passionate about XR. We welcome participants from all backgrounds and skill levels.</p></details></div>
-                    <div class="card rounded-lg reveal delay-100 p-6"><details class="cursor-pointer"><summary class="font-semibold text-lg text-white">How much does it cost?</summary><p class="text-slate-400 mt-4">Thanks to our sponsors, we aim to make the event as accessible as possible. Stay tuned for details on registration fees. We will provide meals and resources throughout the event.</p></details></div>
-                    <div class="card rounded-lg reveal delay-200 p-6"><details class="cursor-pointer"><summary class="font-semibold text-lg text-white">Do I need a team?</summary><p class="text-slate-400 mt-4">Not at all! We'll have dedicated team formation sessions on Day 1 where you can meet other participants and form a team.</p></details></div>
-                    <div class="card rounded-lg reveal delay-300 p-6"><details class="cursor-pointer"><summary class="font-semibold text-lg text-white">What hardware is available?</summary><p class="text-slate-400 mt-4">We are actively working with sponsors to provide access to a range of VR headsets and AR glasses. However, we encourage you to bring your own equipment if you have it.</p></details></div>
+                    <div class="card faq-card rounded-lg reveal p-6"><details><summary class="font-semibold text-lg text-white">Who can participate?</summary><p class="text-slate-400 mt-4">NUhaxXR is open to all students (from Northeastern and other universities), creatives, technologists, and hobbyists passionate about XR. We welcome participants from all backgrounds and skill levels.</p></details></div>
+                    <div class="card faq-card rounded-lg reveal delay-100 p-6"><details><summary class="font-semibold text-lg text-white">How much does it cost?</summary><p class="text-slate-400 mt-4">Thanks to our sponsors, we aim to make the event as accessible as possible. Stay tuned for details on registration fees. We will provide meals and resources throughout the event.</p></details></div>
+                    <div class="card faq-card rounded-lg reveal delay-200 p-6"><details><summary class="font-semibold text-lg text-white">Do I need a team?</summary><p class="text-slate-400 mt-4">Not at all! We'll have dedicated team formation sessions on Day 1 where you can meet other participants and form a team.</p></details></div>
+                    <div class="card faq-card rounded-lg reveal delay-300 p-6"><details><summary class="font-semibold text-lg text-white">What hardware is available?</summary><p class="text-slate-400 mt-4">We are actively working with sponsors to provide access to a range of VR headsets and AR glasses. However, we encourage you to bring your own equipment if you have it.</p></details></div>
                 </div>
             </div>
         </section>
@@ -451,7 +454,7 @@
         // Initialize everything on page load
         init();
 
-        // --- Mobile Menu, Tabs, and Scroll Reveal Logic (This part remains unchanged) ---
+        // --- Mobile Menu, Tabs, and Scroll Reveal Logic ---
         const mobileMenuButton = document.getElementById('mobile-menu-button');
         const mobileMenu = document.getElementById('mobile-menu');
         mobileMenuButton.addEventListener('click', () => { mobileMenu.classList.toggle('hidden'); });
@@ -478,6 +481,17 @@
         }, { threshold: 0.1 });
         const revealElements = document.querySelectorAll('.reveal');
         revealElements.forEach(el => observer.observe(el));
+
+        // --- NEW FAQ INTERACTIVITY SCRIPT ---
+        const faqCards = document.querySelectorAll('.faq-card');
+        faqCards.forEach(card => {
+            card.addEventListener('click', (event) => {
+                const details = card.querySelector('details');
+                if (details && event.target.tagName !== 'SUMMARY') {
+                    details.open = !details.open;
+                }
+            });
+        });
     </script>
 </body>
 </html>
