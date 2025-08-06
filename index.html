@@ -47,7 +47,7 @@
             pointer-events: none;
             z-index: 9999;
             display: none; /* Hidden by default, enabled by JS */
-            transition: transform 0.2s ease-out;
+            /* Removed transition for instant movement */
         }
         #cursor-triangle {
             position: absolute;
@@ -282,7 +282,6 @@
         // --- Desktop-only variables ---
         let cursor;
         let mouseX = 0, mouseY = 0;
-        let cursorX = 0, cursorY = 0;
         let isHovering = false;
 
         function init() {
@@ -385,11 +384,8 @@
             
             // Only animate the cursor on desktop
             if (!isMobile) {
-                const easing = 0.15;
-                cursorX += (mouseX - cursorX) * easing;
-                cursorY += (mouseY - cursorY) * easing;
-
-                cursor.style.transform = `translate(${cursorX}px, ${cursorY}px)`;
+                // Set the cursor position directly to the mouse coordinates
+                cursor.style.transform = `translate(${mouseX}px, ${mouseY}px)`;
 
                 if (isHovering) {
                     cursor.classList.add('hover');
