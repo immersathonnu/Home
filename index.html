@@ -40,8 +40,8 @@
         /* --- 3D TRIANGLE CURSOR STYLES --- */
         #cursor {
             position: fixed;
-            top: -10px; /* Offset to center the triangle point */
-            left: -10px; /* Offset to center the triangle point */
+            top: 0;
+            left: 0;
             width: 20px;
             height: 20px;
             pointer-events: none;
@@ -383,11 +383,12 @@
             
             // Only animate the cursor on desktop
             if (!isMobile) {
-                // Calculate rotation based on horizontal mouse position
-                const rotation = (mouseX - window.innerWidth / 2) * 0.05;
+                // Calculate rotation based on horizontal and vertical mouse position
+                const rotationZ = (mouseX - window.innerWidth / 2) * 0.05;
+                const rotationX = (mouseY - window.innerHeight / 2) * -0.05;
 
                 // Set the cursor position and rotation directly
-                cursor.style.transform = `translate(${mouseX}px, ${mouseY}px) rotate(${rotation}deg)`;
+                cursor.style.transform = `translate(${mouseX}px, ${mouseY}px) rotateX(${rotationX}deg) rotateZ(${rotationZ}deg)`;
 
                 if (isHovering) {
                     cursor.classList.add('hover');
