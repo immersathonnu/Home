@@ -37,28 +37,47 @@
             z-index: -1; /* Stays behind content */
         }
 
-        /* --- NEW CSS CURSOR STYLES --- */
-        .cursor-dot, .cursor-outline {
+        /* --- NEW 3D TRIANGLE CURSOR STYLES --- */
+        #cursor {
             position: fixed;
             top: 0;
             left: 0;
-            transform: translate(-50%, -50%);
-            border-radius: 50%;
+            width: 20px;
+            height: 20px;
             pointer-events: none;
             z-index: 9999;
             display: none; /* Hidden by default, enabled by JS */
+            transition: transform 0.2s ease-out;
         }
-        .cursor-dot {
-            width: 8px;
-            height: 8px;
-            background-color: #c084fc;
+        #cursor-triangle {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 0;
+            height: 0;
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-bottom: 20px solid #c084fc;
+            transition: transform 0.2s ease-out, border-color 0.2s ease-out;
         }
-        .cursor-outline {
-            width: 40px;
-            height: 40px;
-            background-color: rgba(192, 132, 252, 0.2);
-            transition: width 0.3s, height 0.3s, background-color 0.3s;
-            transition-timing-function: ease-out;
+        #cursor-shadow {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 0;
+            height: 0;
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-bottom: 20px solid #8b5cf6;
+            z-index: -1;
+            transition: transform 0.2s ease-out;
+        }
+        #cursor.hover #cursor-triangle {
+            transform: translate(-1px, -3px);
+            border-bottom-color: #e9d5ff;
+        }
+        #cursor.hover #cursor-shadow {
+            transform: translate(1px, 3px);
         }
         /* --- END NEW CURSOR STYLES --- */
 
@@ -125,9 +144,11 @@
 <body class="mobile-bg">
     
     <canvas id="bg-canvas"></canvas>
-    <!-- New HTML elements for the CSS cursor -->
-    <div class="cursor-dot" id="cursor-dot"></div>
-    <div class="cursor-outline" id="cursor-outline"></div>
+    <!-- New HTML for the 3D Triangle Cursor -->
+    <div id="cursor">
+        <div id="cursor-triangle"></div>
+        <div id="cursor-shadow"></div>
+    </div>
 
     <!-- Header -->
     <header class="bg-black/30 backdrop-blur-lg fixed w-full top-0 z-50">
@@ -259,9 +280,9 @@
         const isMobile = window.innerWidth <= 768;
 
         // --- Desktop-only variables ---
-        let cursorDot, cursorOutline;
+        let cursor;
         let mouseX = 0, mouseY = 0;
-        let outlineX = 0, outlineY = 0;
+        let cursorX = 0, cursorY = 0;
         let isHovering = false;
 
         function init() {
@@ -295,10 +316,8 @@
 
             // --- 2. Cursor Setup (Runs ONLY on DESKTOP) ---
             if (!isMobile) {
-                cursorDot = document.getElementById('cursor-dot');
-                cursorOutline = document.getElementById('cursor-outline');
-                cursorDot.style.display = 'block';
-                cursorOutline.style.display = 'block';
+                cursor = document.getElementById('cursor');
+                cursor.style.display = 'block';
                 
                 window.addEventListener('mousemove', onMouseMove, false);
             }
@@ -367,21 +386,15 @@
             // Only animate the cursor on desktop
             if (!isMobile) {
                 const easing = 0.15;
-                outlineX += (mouseX - outlineX) * easing;
-                outlineY += (mouseY - outlineY) * easing;
+                cursorX += (mouseX - cursorX) * easing;
+                cursorY += (mouseY - cursorY) * easing;
 
-                cursorDot.style.transform = `translate(${mouseX}px, ${mouseY}px)`;
-                cursorOutline.style.transform = `translate(${outlineX}px, ${outlineY}px)`;
-
-                const targetScale = isHovering ? 1.5 : 1.0;
-                const currentScale = cursorOutline.style.getPropertyValue('scale') || 1.0;
-                const newScale = parseFloat(currentScale) + (targetScale - currentScale) * 0.2;
-                cursorOutline.style.scale = newScale;
+                cursor.style.transform = `translate(${cursorX}px, ${cursorY}px)`;
 
                 if (isHovering) {
-                    cursorOutline.style.backgroundColor = 'rgba(168, 85, 247, 0.3)'; // Brighter purple
+                    cursor.classList.add('hover');
                 } else {
-                    cursorOutline.style.backgroundColor = 'rgba(192, 132, 252, 0.2)';
+                    cursor.classList.remove('hover');
                 }
             }
         }
