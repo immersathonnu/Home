@@ -118,16 +118,21 @@
             -webkit-backdrop-filter: blur(10px);
             transition: transform 0.3s ease, border-color 0.3s ease;
         }
-        /* REMOVED generic card hover effect to prevent non-interactive elements from highlighting */
         .btn-primary {
             @apply px-6 py-3 bg-violet-600 text-white font-semibold rounded-lg shadow-lg hover:bg-violet-700 focus:outline-none focus:ring-2 focus:ring-violet-400 focus:ring-opacity-75 transition-all transform hover:scale-105;
         }
         .btn-secondary {
             @apply px-6 py-3 bg-transparent border-2 border-slate-600 text-slate-300 font-semibold rounded-lg hover:border-violet-500 hover:text-white focus:outline-none focus:ring-2 focus:ring-violet-400 focus:ring-opacity-75 transition-all transform hover:scale-105;
         }
-        /* ADDED a hover state for visual consistency */
-        .tab-btn { @apply px-4 py-2 font-semibold text-slate-400 rounded-md transition-colors hover:bg-slate-800; }
-        .tab-btn.active { @apply bg-violet-600 text-white; }
+        /* UPDATED tab button styles to be larger and more button-like */
+        .tab-btn { 
+            @apply px-6 py-3 font-semibold text-slate-300 rounded-lg transition-all transform 
+                   border-2 border-slate-800 bg-slate-900/70
+                   hover:border-slate-600 hover:scale-105; 
+        }
+        .tab-btn.active { 
+            @apply bg-violet-600 text-white border-violet-600 scale-105; 
+        }
         .tab-panel { display: none; }
         .tab-panel.active { display: block; }
 
@@ -223,7 +228,13 @@
             <div class="container mx-auto px-6">
                 <div class="text-center mb-16 reveal"><h2 class="text-4xl md:text-5xl font-bold text-white">Event Schedule</h2><p class="text-slate-400 mt-4">A 4-day journey from idea to demo.</p></div>
                 <div class="max-w-4xl mx-auto reveal">
-                    <div class="flex justify-center space-x-2 md:space-x-4 mb-8 p-2 bg-slate-900/70 rounded-lg backdrop-blur-sm"><button class="tab-btn active" data-tab="day1">Day 1</button><button class="tab-btn" data-tab="day2">Day 2</button><button class="tab-btn" data-tab="day3">Day 3</button><button class="tab-btn" data-tab="day4">Day 4</button></div>
+                    <!-- UPDATED container for the buttons -->
+                    <div class="flex justify-center space-x-2 md:space-x-4 mb-12">
+                        <button class="tab-btn active" data-tab="day1">Day 1</button>
+                        <button class="tab-btn" data-tab="day2">Day 2</button>
+                        <button class="tab-btn" data-tab="day3">Day 3</button>
+                        <button class="tab-btn" data-tab="day4">Day 4</button>
+                    </div>
                     <div id="tab-panels">
                         <div id="day1" class="tab-panel active"><div class="space-y-6"><h3 class="text-center text-2xl font-bold text-violet-400">Feb 27: Opening & Team Formation</h3><div class="card rounded-lg p-6 flex justify-between items-center"><p>Check-in & Welcome Ceremony</p><span class="text-slate-500">Morning</span></div><div class="card rounded-lg p-6 flex justify-between items-center"><p>Introductory Workshops & Mixer</p><span class="text-slate-500">Late Morning</span></div><div class="card rounded-lg p-6 flex justify-between items-center"><p>Lunch & Team Formation</p><span class="text-slate-500">Afternoon</span></div><div class="card rounded-lg p-6 flex justify-between items-center"><p>Dinner & Networking</p><span class="text-slate-500">Evening</span></div></div></div>
                         <div id="day2" class="tab-panel"><div class="space-y-6"><h3 class="text-center text-2xl font-bold text-violet-400">Feb 28: Workday & Workshops</h3><div class="card rounded-lg p-6 flex justify-between items-center"><p>Breakfast & Morning Check-ins</p><span class="text-slate-500">Morning</span></div><div class="card rounded-lg p-6 flex justify-between items-center"><p>Mentorship Sessions & Work Time</p><span class="text-slate-500">All Day</span></div><div class="card rounded-lg p-6 flex justify-between items-center"><p>Advanced Workshops</p><span class="text-slate-500">Afternoon</span></div><div class="card rounded-lg p-6 flex justify-between items-center"><p>Dinner & VR Game Night</p><span class="text-slate-500">Evening</span></div></div></div>
