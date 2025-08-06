@@ -23,7 +23,7 @@
         }
         /* Hide default cursor only on non-mobile devices, using !important to override browser defaults */
         @media (min-width: 769px) {
-            body, a, button, details, summary { /* Added summary to the list */
+            body, a, button, details, summary, summary::marker { /* Added summary::marker to the list */
                 cursor: none !important;
             }
         }
