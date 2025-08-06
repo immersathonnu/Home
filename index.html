@@ -185,7 +185,7 @@
                         <div id="day1" class="tab-panel active"><div class="space-y-6"><h3 class="text-center text-2xl font-bold text-violet-400">Feb 27: Opening & Team Formation</h3><div class="card rounded-lg p-6 flex justify-between items-center"><p>Check-in & Welcome Ceremony</p><span class="text-slate-500">Morning</span></div><div class="card rounded-lg p-6 flex justify-between items-center"><p>Introductory Workshops & Mixer</p><span class="text-slate-500">Late Morning</span></div><div class="card rounded-lg p-6 flex justify-between items-center"><p>Lunch & Team Formation</p><span class="text-slate-500">Afternoon</span></div><div class="card rounded-lg p-6 flex justify-between items-center"><p>Dinner & Networking</p><span class="text-slate-500">Evening</span></div></div></div>
                         <div id="day2" class="tab-panel"><div class="space-y-6"><h3 class="text-center text-2xl font-bold text-violet-400">Feb 28: Workday & Workshops</h3><div class="card rounded-lg p-6 flex justify-between items-center"><p>Breakfast & Morning Check-ins</p><span class="text-slate-500">Morning</span></div><div class="card rounded-lg p-6 flex justify-between items-center"><p>Mentorship Sessions & Work Time</p><span class="text-slate-500">All Day</span></div><div class="card rounded-lg p-6 flex justify-between items-center"><p>Advanced Workshops</p><span class="text-slate-500">Afternoon</span></div><div class="card rounded-lg p-6 flex justify-between items-center"><p>Dinner & VR Game Night</p><span class="text-slate-500">Evening</span></div></div></div>
                         <div id="day3" class="tab-panel"><div class="space-y-6"><h3 class="text-center text-2xl font-bold text-violet-400">Mar 1: Work, Test, & Demo</h3><div class="card rounded-lg p-6 flex justify-between items-center"><p>Breakfast & Check-ins</p><span class="text-slate-500">Morning</span></div><div class="card rounded-lg p-6 flex justify-between items-center"><p>Focused Work Time</p><span class="text-slate-500">All Day</span></div><div class="card rounded-lg p-6 flex justify-between items-center"><p>Practice Demos & Feedback</p><span class="text-slate-500">Afternoon</span></div><div class="card rounded-lg p-6 flex justify-between items-center"><p>Dinner & Final Work Haul</p><span class="text-slate-500">Evening</span></div></div></div>
-                        <div id="day4" class="tab-panel"><div class="space-y-6"><h3 class="text-center text-2xl font-bold text-violet-400">Mar 2: Submissions & Awards</h3><div class="card rounded-lg p-6 flex justify-between items-center"><p>Final Project Submissions</p><span class="text-slate-500">Morning</span></div><div class="card rounded-lg p-6 flex justify-between items-center"><p>Demo Set-up & Lunch</p><span class="text-slate-500">Late Morning</span></div><div class="card rounded-lg p-6 flex justify-between items-center"><p>Project Showcase & Final Presentations</p><span class="text-slate-500">Afternoon</span></div><div class="card rounded-lg p-6 flex justify-between items-center"><p>Closing Ceremony & Awards</p<span class="text-slate-500">Evening</span></div></div></div>
+                        <div id="day4" class="tab-panel"><div class="space-y-6"><h3 class="text-center text-2xl font-bold text-violet-400">Mar 2: Submissions & Awards</h3><div class="card rounded-lg p-6 flex justify-between items-center"><p>Final Project Submissions</p><span class="text-slate-500">Morning</span></div><div class="card rounded-lg p-6 flex justify-between items-center"><p>Demo Set-up & Lunch</p><span class="text-slate-500">Late Morning</span></div><div class="card rounded-lg p-6 flex justify-between items-center"><p>Project Showcase & Final Presentations</p><span class="text-slate-500">Afternoon</span></div><div class="card rounded-lg p-6 flex justify-between items-center"><p>Closing Ceremony & Awards</p><span class="text-slate-500">Evening</span></div></div></div>
                     </div>
                 </div>
             </div>
@@ -242,7 +242,6 @@
             let cursorScene, cursorCamera, cursorRenderer, cursorMesh;
             
             const mousePosition = new THREE.Vector2();
-            // --- NEW: State variable for hover status ---
             let isHovering = false;
 
 
@@ -295,7 +294,6 @@
                 // --- 3. Event Listeners ---
                 window.addEventListener('resize', onWindowResize, false);
                 document.addEventListener('scroll', onScroll, false);
-                // The onMouseMove listener now handles hover detection
                 window.addEventListener('mousemove', onMouseMove, false);
                 
                 animate();
@@ -344,13 +342,9 @@
             }
 
             function onMouseMove(event) {
-                // Update mouse position for the cursor animation
                 mousePosition.x = (event.clientX / window.innerWidth) * 2 - 1;
                 mousePosition.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
-                // --- NEW: More robust hover detection ---
-                // Check if the element under the mouse is interactive.
-                // The `closest()` method handles cases where the cursor is over child elements (like text inside a link).
                 const target = event.target;
                 if (target && target.closest('a, button, details')) {
                     isHovering = true;
@@ -362,11 +356,9 @@
             function animate() {
                 requestAnimationFrame(animate);
 
-                // Animate background elements
                 particles.rotation.y += 0.0002;
                 grid.rotation.y += 0.0001;
                 
-                // --- NEW: Smoothly animate cursor scale and color ---
                 const targetScale = isHovering ? 1.8 : 1.0;
                 const easing = 0.2;
                 
@@ -377,18 +369,16 @@
                 const targetColor = isHovering ? new THREE.Color(0x8b5cf6) : new THREE.Color(0xffffff);
                 cursorMesh.material.color.lerp(targetColor, easing);
 
-                // Update cursor position in 3D space to match the mouse
                 const vector = new THREE.Vector3(mousePosition.x, mousePosition.y, 0.5);
                 vector.unproject(cursorCamera);
                 const dir = vector.sub(cursorCamera.position).normalize();
                 const distance = -cursorCamera.position.z / dir.z;
-                cursorMesh.position.copy(camera.position).add(dir.multiplyScalar(distance));
+                // --- FIX: Use cursorCamera instead of the undefined 'camera' ---
+                cursorMesh.position.copy(cursorCamera.position).add(dir.multiplyScalar(distance));
                 
-                // Animate cursor mesh rotation
                 cursorMesh.rotation.y += 0.02;
                 cursorMesh.rotation.x -= 0.01;
 
-                // Render both scenes independently
                 bgRenderer.render(bgScene, bgCamera);
                 cursorRenderer.render(cursorScene, cursorCamera);
             }
