@@ -16,7 +16,7 @@
             color: #e2e8f0;
             overflow-x: hidden;
         }
-        /* Fallback background for mobile */
+        /* Fallback background for mobile, now used if JS is disabled */
         .mobile-bg {
              background-image: radial-gradient(circle at 10% 20%, rgba(139, 92, 246, 0.1), transparent 40%), 
                                radial-gradient(circle at 90% 80%, rgba(126, 34, 206, 0.1), transparent 40%);
@@ -42,6 +42,7 @@
             left: 0;
             z-index: 9999; /* High z-index to be on top of everything */
             pointer-events: none; /* CRITICAL: Allows clicks to go through */
+            display: none; /* Hidden by default, enabled by JS on desktop */
         }
 
         main {
@@ -232,52 +233,52 @@
         </div>
     </footer>
 
-    <!-- REFACTORED JAVASCRIPT SCRIPT -->
+    <!-- UPDATED JAVASCRIPT SCRIPT -->
     <script>
+        // --- Three.js Setup ---
+        // These variables are accessible to all functions in the script
+        let bgScene, bgCamera, bgRenderer, particles, grid;
+        let cursorScene, cursorCamera, cursorRenderer, cursorMesh;
+        
+        const mousePosition = new THREE.Vector2();
+        let isHovering = false;
         const isMobile = window.innerWidth <= 768;
 
-        if (!isMobile) {
-            // --- Three.js Setup ---
-            let bgScene, bgCamera, bgRenderer, particles, grid;
-            let cursorScene, cursorCamera, cursorRenderer, cursorMesh;
-            
-            const mousePosition = new THREE.Vector2();
-            let isHovering = false;
+        function initThreeJS() {
+            document.body.classList.remove('mobile-bg');
 
+            // --- 1. Background Canvas Setup (Runs on ALL devices) ---
+            const bgCanvas = document.getElementById('bg-canvas');
+            bgScene = new THREE.Scene();
+            bgCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            bgCamera.position.z = 5;
+            bgRenderer = new THREE.WebGLRenderer({ canvas: bgCanvas, antialias: true }); 
+            bgRenderer.setSize(window.innerWidth, window.innerHeight);
+            bgRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            bgRenderer.setClearColor(0x050505, 1);
 
-            function initThreeJS() {
-                document.body.classList.remove('mobile-bg');
+            const particlesGeometry = new THREE.BufferGeometry();
+            const particlesCount = 5000;
+            const posArray = new Float32Array(particlesCount * 3);
+            for (let i = 0; i < particlesCount * 3; i++) {
+                posArray[i] = (Math.random() - 0.5) * 100;
+            }
+            particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+            const particlesMaterial = new THREE.PointsMaterial({ size: 0.02, color: 0x8b5cf6 });
+            particles = new THREE.Points(particlesGeometry, particlesMaterial);
+            bgScene.add(particles);
 
-                // --- 1. Background Canvas Setup ---
-                const bgCanvas = document.getElementById('bg-canvas');
-                bgScene = new THREE.Scene();
-                bgCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-                bgCamera.position.z = 5;
-                bgRenderer = new THREE.WebGLRenderer({ canvas: bgCanvas, antialias: true }); 
-                bgRenderer.setSize(window.innerWidth, window.innerHeight);
-                bgRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-                bgRenderer.setClearColor(0x050505, 1);
+            grid = new THREE.GridHelper(100, 50, 0x4f46e5, 0x4f46e5);
+            grid.material.opacity = 0.2;
+            grid.material.transparent = true;
+            grid.position.y = -2;
+            bgScene.add(grid);
 
-                const particlesGeometry = new THREE.BufferGeometry();
-                const particlesCount = 5000;
-                const posArray = new Float32Array(particlesCount * 3);
-                for (let i = 0; i < particlesCount * 3; i++) {
-                    posArray[i] = (Math.random() - 0.5) * 100;
-                }
-                particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
-                const particlesMaterial = new THREE.PointsMaterial({ size: 0.02, color: 0x8b5cf6 });
-                particles = new THREE.Points(particlesGeometry, particlesMaterial);
-                bgScene.add(particles);
-
-                grid = new THREE.GridHelper(100, 50, 0x4f46e5, 0x4f46e5);
-                grid.material.opacity = 0.2;
-                grid.material.transparent = true;
-                grid.position.y = -2;
-                bgScene.add(grid);
-
-
-                // --- 2. Cursor Canvas Setup ---
+            // --- 2. Cursor Canvas Setup (Runs ONLY on DESKTOP) ---
+            if (!isMobile) {
                 const cursorCanvas = document.getElementById('cursor-canvas');
+                cursorCanvas.style.display = 'block'; // Make the canvas visible
+
                 cursorScene = new THREE.Scene();
                 cursorCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
                 cursorCamera.position.z = 5;
@@ -291,74 +292,82 @@
                 cursorMesh = new THREE.Mesh(cursorGeometry, cursorMaterial);
                 cursorScene.add(cursorMesh);
 
-                // --- 3. Event Listeners ---
-                window.addEventListener('resize', onWindowResize, false);
-                document.addEventListener('scroll', onScroll, false);
+                // Add mouse move listener only on desktop
                 window.addEventListener('mousemove', onMouseMove, false);
-                
-                animate();
             }
 
-            function onWindowResize() {
-                const width = window.innerWidth;
-                const height = window.innerHeight;
+            // --- 3. Event Listeners (Universal) ---
+            window.addEventListener('resize', onWindowResize, false);
+            document.addEventListener('scroll', onScroll, false);
+            
+            animate();
+        }
 
-                bgCamera.aspect = width / height;
-                bgCamera.updateProjectionMatrix();
-                bgRenderer.setSize(width, height);
+        function onWindowResize() {
+            const width = window.innerWidth;
+            const height = window.innerHeight;
 
+            // Always resize the background
+            bgCamera.aspect = width / height;
+            bgCamera.updateProjectionMatrix();
+            bgRenderer.setSize(width, height);
+
+            // Only resize the cursor canvas if it exists (on desktop)
+            if (!isMobile) {
                 cursorCamera.aspect = width / height;
                 cursorCamera.updateProjectionMatrix();
                 cursorRenderer.setSize(width, height);
             }
+        }
 
-            const perspectiveSections = document.querySelectorAll('.perspective-container');
+        const perspectiveSections = document.querySelectorAll('.perspective-container');
 
-            function onScroll() {
-                const t = document.body.getBoundingClientRect().top;
-                bgCamera.position.z = 5 + t * 0.005;
-                bgCamera.position.y = t * 0.001;
+        function onScroll() {
+            const t = document.body.getBoundingClientRect().top;
+            bgCamera.position.z = 5 + t * 0.005;
+            bgCamera.position.y = t * 0.001;
 
-                perspectiveSections.forEach(section => {
-                    const content = section.querySelector('.perspective-content');
-                    if (!content) return;
-                    const rect = section.getBoundingClientRect();
-                    const elCenter = rect.top + rect.height / 2;
-                    const viewportCenter = window.innerHeight / 2;
-                    const distFromCenter = viewportCenter - elCenter;
-                    let rotation = (distFromCenter / viewportCenter) * -20;
-                    let translateX = 0;
-                    let opacity = 1;
-                    if (section.id === 'home' || section.id === 'mission') {
-                        if (rect.bottom < viewportCenter) {
-                            const exitProgress = Math.min(1, (viewportCenter - rect.bottom) / viewportCenter);
-                            translateX = (section.id === 'home' ? 100 : -100) * exitProgress;
-                            opacity = 1 - exitProgress;
-                        }
+            perspectiveSections.forEach(section => {
+                const content = section.querySelector('.perspective-content');
+                if (!content) return;
+                const rect = section.getBoundingClientRect();
+                const elCenter = rect.top + rect.height / 2;
+                const viewportCenter = window.innerHeight / 2;
+                const distFromCenter = viewportCenter - elCenter;
+                let rotation = (distFromCenter / viewportCenter) * -20;
+                let translateX = 0;
+                let opacity = 1;
+                if (section.id === 'home' || section.id === 'mission') {
+                    if (rect.bottom < viewportCenter) {
+                        const exitProgress = Math.min(1, (viewportCenter - rect.bottom) / viewportCenter);
+                        translateX = (section.id === 'home' ? 100 : -100) * exitProgress;
+                        opacity = 1 - exitProgress;
                     }
-                    content.style.transform = `translateX(${translateX}%) rotateX(${rotation}deg)`;
-                    content.style.opacity = opacity;
-                });
-            }
-
-            function onMouseMove(event) {
-                mousePosition.x = (event.clientX / window.innerWidth) * 2 - 1;
-                mousePosition.y = -(event.clientY / window.innerHeight) * 2 + 1;
-
-                const target = event.target;
-                if (target && target.closest('a, button, details')) {
-                    isHovering = true;
-                } else {
-                    isHovering = false;
                 }
-            }
-            
-            function animate() {
-                requestAnimationFrame(animate);
+                content.style.transform = `translateX(${translateX}%) rotateX(${rotation}deg)`;
+                content.style.opacity = opacity;
+            });
+        }
 
-                particles.rotation.y += 0.0002;
-                grid.rotation.y += 0.0001;
-                
+        // This function is only called by the event listener on desktop
+        function onMouseMove(event) {
+            mousePosition.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mousePosition.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+            const target = event.target;
+            isHovering = !!(target && target.closest('a, button, details'));
+        }
+        
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // Always animate the background
+            particles.rotation.y += 0.0002;
+            grid.rotation.y += 0.0001;
+            bgRenderer.render(bgScene, bgCamera);
+            
+            // Only animate the cursor on desktop
+            if (!isMobile) {
                 const targetScale = isHovering ? 1.8 : 1.0;
                 const easing = 0.2;
                 
@@ -373,18 +382,17 @@
                 vector.unproject(cursorCamera);
                 const dir = vector.sub(cursorCamera.position).normalize();
                 const distance = -cursorCamera.position.z / dir.z;
-                // --- FIX: Use cursorCamera instead of the undefined 'camera' ---
                 cursorMesh.position.copy(cursorCamera.position).add(dir.multiplyScalar(distance));
                 
                 cursorMesh.rotation.y += 0.02;
                 cursorMesh.rotation.x -= 0.01;
 
-                bgRenderer.render(bgScene, bgCamera);
                 cursorRenderer.render(cursorScene, cursorCamera);
             }
-
-            initThreeJS();
         }
+
+        // Initialize everything on page load
+        initThreeJS();
 
         // --- Mobile Menu, Tabs, and Scroll Reveal Logic (This part remains unchanged) ---
         const mobileMenuButton = document.getElementById('mobile-menu-button');
