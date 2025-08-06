@@ -113,7 +113,7 @@
     <header class="bg-black/30 backdrop-blur-lg fixed w-full top-0 z-50">
         <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
             <a href="#">
-                <img src="assets/logo.png" alt="ImersAthon Logo" class="h-8 w-auto" onerror="this.style.display='none'; this.parentElement.innerHTML = 'ImersAthon'">
+                <img src="assets/logo.png" alt="ImersAthon Logo" class="h-12 w-auto" onerror="this.style.display='none'; this.parentElement.innerHTML = 'ImersAthon'">
             </a>
             <!-- Desktop Nav -->
             <div class="hidden md:flex space-x-8 items-center">
@@ -382,7 +382,7 @@
                 vector.unproject(cursorCamera);
                 const dir = vector.sub(cursorCamera.position).normalize();
                 const distance = -cursorCamera.position.z / dir.z;
-                cursorMesh.position.copy(cursorCamera.position).add(dir.multiplyScalar(distance));
+                cursorMesh.position.copy(camera.position).add(dir.multiplyScalar(distance));
                 
                 // Animate cursor mesh rotation
                 cursorMesh.rotation.y += 0.02;
